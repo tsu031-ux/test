@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>化学クイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caveat:wght@600&display=swap');
+
+  :root {
+    --bg: #f0f7ff;
+    --card: #ffffff;
+    --accent: #0ea5e9;
+    --accent2: #8b5cf6;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #1e293b;
+    --muted: #64748b;
+    --shadow: 0 4px 24px rgba(14,165,233,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Nunito',sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height:100vh;
+    padding:24px 16px;
+  }
+
+  /* HEADER */
+  .header { text-align:center; margin-bottom:24px; }
+  .header h1 {
+    font-family:'Caveat',cursive;
+    font-size:2.8rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .header p { color:var(--muted); font-size:0.88rem; margin-top:4px; }
+
+  /* SCREENS */
+  .screen { display:none; max-width:700px; margin:0 auto; }
+  .screen.active { display:block; }
+
+  /* ===== HOME ===== */
+  .home-section-title {
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:3px;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:12px;
+    margin-top:28px;
+  }
+  .home-section-title:first-of-type { margin-top:0; }
+
+  /* Level Selector */
+  .level-row {
+    display:flex; gap:10px; margin-bottom:20px;
+  }
+  .level-btn {
+    flex:1; padding:12px 8px;
+    border-radius:14px;
+    border:2px solid #cbd5e1;
+    background:#fff;
+    font-size:0.82rem;
+    font-weight:700;
+    font-family:'Nunito',sans-serif;
+    cursor:pointer;
+    text-align:center;
+    transition: all 0.2s;
+  }
+  .level-btn .level-icon { font-size:1.6rem; display:block; margin-bottom:4px; }
+  .level-btn:hover { border-color: var(--accent); }
+  .level-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+    box-shadow: var(--shadow);
+  }
+
+  /* Category Grid */
+  .cat-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .cat-card {
+    background:var(--card);
+    border-radius:16px;
+    padding:24px 12px 20px;
+    text-align:center;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    border:2px solid transparent;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .cat-card:hover {
+    transform:translateY(-3px);
+    border-color:var(--accent);
+    box-shadow: 0 6px 28px rgba(14,165,233,0.22);
+  }
+  .cat-card .icon { font-size:2rem; margin-bottom:8px; }
+  .cat-card h3 { font-size:0.88rem; font-weight:700; margin-bottom:4px; }
+  .cat-card .count { font-size:0.72rem; color:var(--muted); }
+
+  /* ===== QUIZ ===== */
+  .quiz-header {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+  }
+  .back-btn {
+    background:none; border:none;
+    color:var(--muted); cursor:pointer;
+    font-size:0.82rem; font-weight:600; font-family:'Nunito',sans-serif;
+  }
+  .back-btn:hover { color:var(--accent); }
+  .progress-info { font-size:0.82rem; color:var(--muted); font-weight:600; }
+
+  .level-badge {
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:999px;
+    font-size:0.7rem;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .level-badge.middle { background:#fef3c7; color:#92400e; }
+  .level-badge.high { background:#ede9fe; color:#7c3aed; }
+
+  .progress-bar-wrap {
+    background:#e2e8f0; border-radius:999px; height:7px; margin-bottom:22px; overflow:hidden;
+  }
+  .progress-bar {
+    height:100%;
+    background:linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius:999px; width:0%; transition:width 0.4s ease;
+  }
+
+  .question-card {
+    background:var(--card); border-radius:20px;
+    padding:28px 22px 24px; box-shadow:var(--shadow);
+  }
+  .q-num { font-size:0.72rem; text-transform:uppercase; letter-spacing:2px; color:var(--accent); font-weight:700; margin-bottom:8px; }
+  .q-text { font-size:1.1rem; font-weight:700; line-height:1.6; margin-bottom:22px; }
+
+  .choices { display:flex; flex-direction:column; gap:9px; }
+  .choice {
+    background:#f1f5f9; border:2px solid #e2e8f0;
+    border-radius:12px; padding:13px 16px;
+    cursor:pointer; font-size:0.9rem; font-weight:600;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    display:flex; align-items:center; gap:10px;
+  }
+  .choice:hover { border-color:var(--accent); background:#e0f2fe; transform:translateX(3px); }
+  .choice .choice-label {
+    background:var(--accent); color:#fff;
+    width:26px; height:26px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.75rem; font-weight:800; flex-shrink:0;
+  }
+  .choice.correct { border-color:var(--green); background:#ecfdf5; }
+  .choice.correct .choice-label { background:var(--green); }
+  .choice.wrong { border-color:var(--red); background:#fef2f2; }
+  .choice.wrong .choice-label { background:var(--red); }
+  .choice.disabled { pointer-events:none; }
+
+  .next-btn {
+    margin-top:18px; width:100%; padding:13px;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff; border:none; border-radius:12px;
+    font-size:0.9rem; font-weight:700; font-family:'Nunito',sans-serif;
+    cursor:pointer; display:none; transition:opacity 0.2s, transform 0.15s;
+  }
+  .next-btn:hover { opacity:0.88; transform:translateY(-1px); }
+  .next-btn.visible { display:block; }
+
+  /* ===== RESULT ===== */
+  .result-card {
+    background:var(--card); border-radius:24px;
+    padding:44px 24px 32px; text-align:center; box-shadow:var(--shadow);
+  }
+  .result-card .result-icon { font-size:3.4rem; margin-bottom:10px; }
+  .result-card h2 { font-size:1.5rem; margin-bottom:6px; }
+  .result-card .score-big {
+    font-family:'Caveat',cursive; font-size:3rem;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin:6px 0;
+  }
+  .result-card .score-label { font-size:0.82rem; color:var(--muted); margin-bottom:22px; }
+  .result-btn {
+    display:inline-block; padding:11px 28px;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff; border:none; border-radius:12px;
+    font-size:0.88rem; font-weight:700; font-family:'Nunito',sans-serif;
+    cursor:pointer; margin:4px; transition:opacity 0.2s;
+  }
+  .result-btn:hover { opacity:0.85; }
+  .result-btn.outline {
+    background:none; border:2px solid var(--accent); color:var(--accent);
+  }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:28px; left:50%;
+    transform:translateX(-50%) translateY(120px);
+    background:#1e293b; color:#fff;
+    padding:9px 20px; border-radius:999px;
+    font-size:0.8rem; font-weight:600;
+    transition:transform 0.35s ease; z-index:999; white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  @media(max-width:480px){
+    .cat-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚗️ 化学クイズ</h1>
+  <p>レベルを選んで、化学の知識を試してみよう！</p>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-section-title">📚 学年レベル</div>
+  <div class="level-row">
+    <div class="level-btn active" id="btn-middle" onclick="setLevel('middle')">
+      <span class="level-icon">🏫</span>中学生
+    </div>
+    <div class="level-btn" id="btn-high" onclick="setLevel('high')">
+      <span class="level-icon">🎓</span>高校生
+    </div>
+  </div>
+  <div class="home-section-title">🧪 カテゴリ</div>
+  <div class="cat-grid" id="cat-grid"></div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="goHome()">← 戻る</button>
+    <div class="progress-info" id="progress-info">1 / 10</div>
+  </div>
+  <div class="level-badge" id="level-badge">中学生</div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+  <div class="question-card">
+    <div class="q-num" id="q-num">問題 1</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">次へ →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="screen-result">
+  <div class="result-card">
+    <div class="result-icon" id="result-icon">🎉</div>
+    <h2 id="result-title">完了！</h2>
+    <div class="score-big" id="score-big">8 / 10</div>
+    <div class="score-label" id="score-label">正解率</div>
+    <div>
+      <button class="result-btn" onclick="retryQuiz()">もう一度やる</button>
+      <button class="result-btn outline" onclick="goHome()">ホームへ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ DATA ============
+const DATA = {
+  // ===== 元素記号 =====
+  element: {
+    middle: [
+      {q:"水素の元素記号は？",c:["H","He","Li","Na"],a:0},
+      {q:"ヘリウムの元素記号は？",c:["H","He","Li","Be"],a:1},
+      {q:"炭素の元素記号は？",c:["Ca","C","Co","Cr"],a:1},
+      {q:"窒素の元素記号は？",c:["Na","Ne","N","Ni"],a:2},
+      {q:"酸素の元素記号は？",c:["O","Os","O₂","Og"],a:0},
+      {q:"ナトリウムの元素記号は？",c:["N","Na","Nb","Ne"],a:1},
+      {q:"鉄の元素記号は？",c:["Ir","In","Fe","Fi"],a:2},
+      {q:"金の元素記号は？",c:["Go","Gu","Au","Ag"],a:2},
+      {q:"銀の元素記号は？",c:["Si","Ag","Au","Se"],a:1},
+      {q:"塩素の元素記号は？",c:["Cl","Ca","Co","Cu"],a:0},
+      {q:"硫黄の元素記号は？",c:["Si","Se","S","Sb"],a:2},
+      {q:"カリウムの元素記号は？",c:["K","Ka","Kr","Kn"],a:0},
+      {q:"カルシウムの元素記号は？",c:["C","Ca","Cr","Cu"],a:1},
+      {q:"マグネシウムの元素記号は？",c:["Mg","Mn","Mo","Me"],a:0},
+      {q:"アルミニウムの元素記号は？",c:["Al","Am","An","Ar"],a:0},
+      {q:"ネオンの元素記号は？",c:["N","Na","Ne","Ni"],a:2},
+      {q:"フッ素の元素記号は？",c:["F","Fe","Fl","Fr"],a:0},
+      {q:"リンの元素記号は？",c:["P","Pb","Pu","Pa"],a:0},
+      {q:"シリコンの元素記号は？",c:["S","Si","Sn","Sb"],a:1},
+      {q:"鉛の元素記号は？",c:["Pb","P","Pd","Pm"],a:0},
+      {q:"銅の元素記号は？",c:["Cu","C","Cr","Co"],a:0},
+      {q:"アルゴンの元素記号は？",c:["Al","Ar","Am","At"],a:1},
+      {q:"ヨウ素の元素記号は？",c:["I","In","Ir","Ir"],a:0},
+      {q:"錡（スズ）の元素記号は？",c:["Sn","Si","Se","S"],a:0},
+      {q:"亜鉛の元素記号は？",c:["Zn","Zr","Z","Ze"],a:0},
+      {q:"コバルトの元素記号は？",c:["C","Ca","Co","Cu"],a:2},
+      {q:"ニケルの元素記号は？",c:["N","Na","Ne","Ni"],a:3},
+      {q:"マンガンの元素記号は？",c:["Mg","Mn","Mo","Me"],a:1},
+      {q:"クロムの元素記号は？",c:["Ca","C","Co","Cr"],a:3},
+      {q:"バリウムの元素記号は？",c:["Ba","Be","B","Bi"],a:0}
+    ],
+    high: [
+      {q:"プラセオジムの元素記号は？",c:["Pr","Pa","Pd","Pm"],a:0},
+      {q:"ネオジムの元素記号は？",c:["Na","Ne","Nd","Nb"],a:2},
+      {q:"ガドリニウムの元素記号は？",c:["Gd","Ge","Ga","Gn"],a:0},
+      {q:"テルビウムの元素記号は？",c:["Tb","Te","Ti","Th"],a:0},
+      {q:"ジスプロシウムの元素記号は？",c:["Ds","Dy","Db","Dm"],a:1},
+      {q:"ホルミウムの元素記号は？",c:["Ho","He","Hf","H"],a:0},
+      {q:"エルビウムの元素記号は？",c:["Er","Es","Eu","Eu"],a:0},
+      {q:"ツリウムの元素記号は？",c:["Th","Tm","Ti","Tu"],a:1},
+      {q:"イテルビウムの元素記号は？",c:["Y","Yb","Yt","Ym"],a:1},
+      {q:"ルテシウムの元素記号は？",c:["Lu","La","Li","Lr"],a:0},
+      {q:"ハフニウムの元素記号は？",c:["Hf","He","Ho","H"],a:0},
+      {q:"タンタルの元素記号は？",c:["Ta","Ti","Th","Te"],a:0},
+      {q:"レニウムの元素記号は？",c:["Ra","Re","Rh","Rn"],a:1},
+      {q:"オスミウムの元素記号は？",c:["O","Os","Og","Og"],a:1},
+      {q:"イリジウムの元素記号は？",c:["I","In","Ir","It"],a:2},
+      {q:"プラチナの元素記号は？",c:["Pu","Pt","Pb","Pa"],a:1},
+      {q:"テルルの元素記号は？",c:["Ti","Te","Th","Tb"],a:1},
+      {q:"アスタチンの元素記号は？",c:["As","At","Am","Ar"],a:1},
+      {q:"フランシウムの元素記号は？",c:["Fr","Fe","Fl","Fm"],a:0},
+      {q:"ラジウムの元素記号は？",c:["Rn","Ra","Rh","Re"],a:1},
+      {q:"アクチニウムの元素記号は？",c:["Ac","Am","Al","Ar"],a:0},
+      {q:"トリウムの元素記号は？",c:["Ti","Te","Th","Tm"],a:2},
+      {q:"プロトアクチニウムの元素記号は？",c:["Pr","Pa","Pu","Pb"],a:1},
+      {q:"ウラニウムの元素記号は？",c:["U","Un","Ur","Us"],a:0},
+      {q:"ネプチウムの元素記号は？",c:["Na","Ne","Np","Nb"],a:2},
+      {q:"プルトニウムの元素記号は？",c:["Pb","Pt","Pd","Pu"],a:3},
+      {q:"アメリシウムの元素記号は？",c:["Al","Am","Ar","At"],a:1},
+      {q:"キュリウムの元素記号は？",c:["C","Ca","Cu","Cm"],a:3},
+      {q:"バークリウムの元素記号は？",c:["Ba","Be","Bk","Bi"],a:2},
+      {q:"カリフォルニウムの元素記号は？",c:["Ca","Cf","Co","Cu"],a:1}
+    ]
+  },
+  // ===== 化学式 =====
+  formula: {
+    middle: [
+      {q:"水の化学式は？",c:["H₂O","CO₂","NaCl","H₂SO₄"],a:0},
+      {q:"二酸化炭素の化学式は？",c:["CO","CO₂","C₂O","COO"],a:1},
+      {q:"塩化ナトリウム（食塩）の化学式は？",c:["NaCl","KCl","NaBr","CaCl₂"],a:0},
+      {q:"酸素の化学式は？",c:["O","O₂","O₃","OH"],a:1},
+      {q:"窒素の化学式は？",c:["N","N₂","N₃","NH₃"],a:1},
+      {q:"水素の化学式は？",c:["H","H₂","H₂O","HCl"],a:1},
+      {q:"塩酸の化学式は？",c:["HCl","H₂SO₄","HNO₃","H₂CO₃"],a:0},
+      {q:"硫酸の化学式は？",c:["H₂SO₃","H₂SO₄","HSO₄","H₃SO₄"],a:1},
+      {q:"炭酸の化学式は？",c:["CO₂","H₂CO₃","CH₃OH","HCOOH"],a:1},
+      {q:"メタン（天然ガス）の化学式は？",c:["CH₄","C₂H₆","C₃H₈","CH₃OH"],a:0},
+      {q:"エタノール（アルコール）の化学式は？",c:["CH₃OH","C₂H₅OH","C₃H₇OH","CH₄"],a:1},
+      {q:"アンモニアの化学式は？",c:["NH₃","NH₂","N₂H₄","NaOH"],a:0},
+      {q:"水酸化ナトリウム（烧碱）の化学式は？",c:["NaOH","KOH","Ca(OH)₂","NaCl"],a:0},
+      {q:"炭酸カルシウム（石灰石）の化学式は？",c:["CaCO₃","Ca(OH)₂","CaO","CaCl₂"],a:0},
+      {q:"酸化鉄（鉄锈）の化学式は？",c:["FeO","Fe₂O₃","Fe₃O₄","FeCl₂"],a:1},
+      {q:"オゾンの化学式は？",c:["O","O₂","O₃","O₄"],a:2},
+      {q:"塩化アルミニウムの化学式は？",c:["AlCl","AlCl₂","AlCl₃","Al₂Cl₃"],a:2},
+      {q:"硝酸の化学式は？",c:["HNO₂","HNO₃","H₂NO₃","HN₃O"],a:1},
+      {q:"酸化マグネシウムの化学式は？",c:["MgO","Mg₂O","MgO₂","Mg(OH)₂"],a:0},
+      {q:"塩化カリウムの化学式は？",c:["KCl","NaCl","CaCl₂","KBr"],a:0},
+      {q:"酸化銅の化学式は？",c:["CuO","Cu₂O","CuO₂","Cu(OH)₂"],a:0},
+      {q:"二酸化硫黄の化学式は？",c:["SO","SO₂","SO₃","S₂O"],a:1},
+      {q:"三酸化硫黄の化学式は？",c:["SO₂","SO₃","S₂O₃","H₂SO₄"],a:1},
+      {q:"酸化アルミニウムの化学式は？",c:["AlO","Al₂O","Al₂O₃","AlO₃"],a:2},
+      {q:"炭酸ナトリウムの化学式は？",c:["NaCO₃","Na₂CO₃","Na₂CO","NaCO"],a:1},
+      {q:"硫化鉄の化学式は？",c:["FeS","Fe₂S₃","FeSO₄","FeS₂"],a:0},
+      {q:"塩化鉄（III）の化学式は？",c:["FeCl₂","FeCl₃","Fe₂Cl₃","FeCl"],a:1},
+      {q:"酸化亜鉛の化学式は？",c:["ZnO","Zn₂O","ZnO₂","Zn(OH)₂"],a:0},
+      {q:"炭化アルミニウムの化学式は？",c:["AlC","Al₄C₃","Al₂C₃","AlC₂"],a:1},
+      {q:"二酸化窒素の化学式は？",c:["NO","NO₂","N₂O","N₂O₃"],a:1}
+    ],
+    high: [
+      {q:"エタン（C₂H₆の構造式）の炭素間の結合は？",c:["二重結合","三重結合","単結合","配位結合"],a:2},
+      {q:"エチレンの化学式は？",c:["C₂H₄","C₂H₆","C₃H₆","C₃H₈"],a:0},
+      {q:"アセチレンの化学式は？",c:["C₂H₂","C₂H₄","C₂H₆","C₃H₄"],a:0},
+      {q:"グリセリンの化学式は？",c:["C₃H₈O₃","C₃H₆O₃","C₂H₈O₃","C₄H₈O₃"],a:0},
+      {q:"酢酸の化学式は？",c:["HCOOH","CH₃COOH","C₂H₅COOH","CH₃CHO"],a:1},
+      {q:"ベンゼンの化学式は？",c:["C₅H₆","C₆H₆","C₇H₈","C₆H₁₂"],a:1},
+      {q:"トルエンの化学式は？",c:["C₆H₆","C₇H₈","C₈H₁₀","C₆H₅CH₃"],a:3},
+      {q:"グルコースの化学式は？",c:["C₅H₁₀O₅","C₆H₁₂O₆","C₆H₁₀O₅","C₁₂H₂₂O₁₁"],a:1},
+      {q:"スクロース（蔗糖）の化学式は？",c:["C₆H₁₂O₆","C₁₂H₂₂O₁₁","C₆H₁₀O₅","C₁₀H₁₈O₉"],a:1},
+      {q:"硫酸鉄（III）の化学式は？",c:["FeSO₄","Fe₂(SO₄)₃","Fe₃(SO₄)₂","FeS₂O₄"],a:1},
+      {q:"炭酸バリウムの化学式は？",c:["BaCO₃","Ba(OH)₂","BaCl₂","BaSO₄"],a:0},
+      {q:"硫酸バリウムの化学式は？",c:["BaSO₃","BaSO₄","Ba(OH)₂","BaCl₂"],a:1},
+      {q:"高度ポリエチレンの単位は？",c:["-CH₂-CH₂-","-CH=CH-","-CH₂-CH₃","-CH₃"],a:0},
+      {q:"ポリスチレンの単位は？",c:["-CH₂-CH₂-","-CH₂-CH(C₆H₅)-","-CH=CH-","以上の全て"],a:1},
+      {q:"酵素の本質は何か？",c:["炭水化物","脂質","タンパク質","核酸"],a:2},
+      {q:"エタノールの氧化mahsul物は何か？",c:["メタノール","アセトアルデヒド","酢酸","エタン"],a:1},
+      {q:"アルデヒド基の記号は？",c:["-OH","-CHO","-COOH","-NH₂"],a:1},
+      {q:"カルボキシル基の記号は？",c:["-OH","-CHO","-COOH","-CO-"],a:2},
+      {q:"アミノ基の記号は？",c:["-OH","-NH₂","-COOH","-CHO"],a:1},
+      {q:"ヒドロキシル基の記号は？",c:["-H","-OH","-O-","-CHO"],a:1},
+      {q:"エストラジオル（女性ホルモン）の分類は？",c:["アルコール","ステロイド","アミノ酸","炭水化物"],a:1},
+      {q:"テストステロン（男性ホルモン）の分類は？",c:["アルコール","ステロイド","アミノ酸","炭水化物"],a:1},
+      {q:"ATP（アデノシン三リン酸）の「A」は？",c:["Adenosine","Amino","Acetic","Acetyl"],a:0},
+      {q:"DNA中の塩基の組み合わせは？",c:["A-T, G-C","A-C, G-T","A-G, C-T","以上の全て"],a:0},
+      {q:"ナイロン66の化学的分類は？",c:["ポリエステル","ポリアミド","ポリウレタン","ポリスチレン"],a:1},
+      {q:"PETの化学的分類は？",c:["ポリエステル","ポリアミド","ポリウレタン","ポリスチレン"],a:0},
+      {q:"アセトン（丙酮）の化学式は？",c:["CH₃COCH₃","CH₃CHO","CH₃OH","C₂H₅OH"],a:0},
+      {q:"ニトログリセリンの化学的分類は？",c:["エステル","エーテル","アルコール","アルデヒド"],a:0},
+      {q:"塩化メチルの化学式は？",c:["CH₃Cl","C₂H₅Cl","CH₂Cl₂","CCl₄"],a:0},
+      {q:"ポリ塩化ビニルの単位は？",c:["-CH₂-CHCl-","-CH₂-CH₂-","-CHCl-CHCl-","以上の全て"],a:0}
+    ]
+  },
+  // ===== 化学反応式 =====
+  reaction: {
+    middle: [
+      {q:"水素と酸素が燃えて何ができる？",c:["水","炭酸","塩酸","硫酸"],a:0},
+      {q:"炭素が燃えて完全燃燃燃する場合の生成物は？",c:["CO","CO₂","C₂O","COO"],a:1},
+      {q:"鉄が燃えると何になる？",c:["Fe₂O₃","Fe₃O₄","FeO","FeCl₃"],a:1},
+      {q:"マグネシウムが燃えると何になる？",c:["MgO","Mg₂O","MgO₂","MgCO₃"],a:0},
+      {q:"炭酸の分解で何が生まれる？",c:["H₂ と O₂","CO₂ と H₂O","H₂O と O₂","CO と H₂O"],a:1},
+      {q:"酸化銅を炭で還原すると何になる？",c:["Cu と CO₂","Cu と CO","CuO と C","Cu と C"],a:0},
+      {q:"塩酸に炭酸ナトリウムを加えると生まれる気体は？",c:["O₂","H₂","CO₂","N₂"],a:2},
+      {q:"水を電解すると何が生まれる？",c:["H₂と O₂","CO₂とH₂O","Na と Cl₂","H₂とCO"],a:0},
+      {q:"塩酸に亜鉛を加えると生まれる気体は？",c:["O₂","CO₂","H₂","N₂"],a:2},
+      {q:"水酸化ナトリウムと塩酸を混ぜると何になる？",c:["NaCl と H₂O","NaOH と HCl","Na と Cl₂","以上の全て"],a:0},
+      {q:"炭素が不完全燃燃燃する場合の生成物は？",c:["CO₂","CO","C₂O","O₂"],a:1},
+      {q:"二酸化炭素と水の反応の生成物は？",c:["H₂CO₃","HCl","NaOH","H₂SO₄"],a:0},
+      {q:"酸化鉄を炭で還原すると何になる？",c:["Fe と CO₂","Fe と CO","Fe₂O₃ と C","Fe と C"],a:0},
+      {q:"炭酸カルシウムを熱すると何になる？",c:["CaO と CO₂","Ca と O₂","Ca(OH)₂ と CO","CaCl₂ と CO₂"],a:0},
+      {q:"酸化マグネシウムを炭で還原すると何になる？",c:["Mg と CO₂","Mg と CO","MgO と C","Mg と C"],a:0},
+      {q:"塩酸に鉄を加えると何になる？",c:["FeCl₂ と H₂","FeCl₃ と H₂","Fe₂O₃ と H₂","FeO と H₂"],a:0},
+      {q:"酢酸と水酸化ナトリウムの反応の生成物は？",c:["CH₃COONa と H₂O","NaCl と H₂O","Na₂CO₃ と H₂O","以上の全て"],a:0},
+      {q:"塩化アルミニウムと水酸化ナトリウムの反応で生まれる沉淀は？",c:["Al(OH)₃","Fe(OH)₃","Cu(OH)₂","NaOH"],a:0},
+      {q:"硫酸と炭酸ナトリウムの反応で生まれる気体は？",c:["O₂","H₂","CO₂","SO₂"],a:2},
+      {q:"酸化亜鉛を炭で還原すると何になる？",c:["Zn と CO₂","Zn と CO","ZnO と C","Zn と C"],a:0},
+      {q:"メタンが燃えると何になる？",c:["CO と H₂O","CO₂ と H₂O","C と H₂O","CO₂ と H₂"],a:1},
+      {q:"アルコールが燃えると何になる？",c:["CO₂ と H₂O","CO と H₂O","C と H₂O","CO₂ と H₂"],a:0},
+      {q:"塩酸に炭酸カルシウムを加えると生まれる気体は？",c:["O₂","H₂","CO₂","SO₂"],a:2},
+      {q:"水酸化カルシウムと塩酸の反応の生成物は？",c:["CaCl₂ と H₂O","CaCO₃ と H₂O","Ca と Cl₂ と H₂O","以上の全て"],a:0},
+      {q:"硫酸と水酸化バリウムの反応で生まれる沉淀は？",c:["BaSO₄","BaCO₃","Ba(OH)₂","BaCl₂"],a:0},
+      {q:"塩化鉄（III）と水酸化ナトリウムの反応で生まれる沉淀は？",c:["Fe(OH)₂","Fe(OH)₃","Cu(OH)₂","Al(OH)₃"],a:1},
+      {q:"二酸化炭素を石灰水に通すと何になる？",c:["CaCO₃（白い沉淀）","Ca(OH)₂","CaCl₂","CO₂が消える"],a:0},
+      {q:"酸化銅を水素で還原すると何になる？",c:["Cu と H₂O","Cu と H₂","CuO と H₂O","Cu と O"],a:0},
+      {q:"ナトリウムを水に投げると何が生まれる？",c:["NaOH と H₂","Na₂O と H₂","NaCl と H₂","NaOH と O₂"],a:0},
+      {q:"塩酸にアルミニウムを加えると生まれる気体は？",c:["O₂","CO₂","H₂","N₂"],a:2}
+    ],
+    high: [
+      {q:"エタノールの燃燃燃の化学反応式の生成物は？",c:["CO₂ と H₂O","CO と H₂O","C と H₂O","CO₂ と H₂"],a:0},
+      {q:"エタノールの氧化で生まれるアルデヒドは何か？",c:["メタノール","アセトアルデヒド","ベンズアルデヒド","プロパナル"],a:1},
+      {q:"アセトアルデヒドの酸化で何になる？",c:["メタノール","エタノール","酢酸","エタン"],a:2},
+      {q:"エステル化反応とは？",c:["アルコール＋酸→エステル＋水","アルコール＋塩基→エステル＋水","アルデヒド＋酸→エステル＋水","以上の全て"],a:0},
+      {q:"ベンゼンの臭素化の触媒は？",c:["FeBr₃","AlCl₃","H₂SO₄","HNO₃"],a:0},
+      {q:"エチレンの水素化の生成物は？",c:["エタン","エタノール","アセチレン","プロパン"],a:0},
+      {q:"アルコールの脱水反応で何になる？",c:["アルデヒド","エーテルまたはアルキレン","酸","以上の全て"],a:1},
+      {q:"アルキルハロゲン化物の水解で何になる？",c:["アルコール","アルデヒド","酸","エステル"],a:0},
+      {q:"ポリ合成の反応の種類は？",c:["置換反応","付加反応","縮合反応","以上の両方（付加と縮合）"],a:3},
+      {q:"エチレンの塩素化で何になる？",c:["塩化ビニル","二塩化エタン","塩化エチル","以上の全て"],a:1},
+      {q:"アルコールの氧化で直接生まれるのは？",c:["エタン","アルデヒド","酸","エステル"],a:1},
+      {q:"アルデヒドの還原で何になる？",c:["アルコール","酸","エステル","エーテル"],a:0},
+      {q:"アルキルハロゲン化物とNaOHの反応で何になる？",c:["アルコール","アルデヒド","酸","エステル"],a:0},
+      {q:"エタノールと酢酸の反応で何になる？",c:["エタン","エタノール","酢酸エチル と H₂O","以上の全て"],a:2},
+      {q:"塩酸と水酸化ナトリウムの反応の種類は？",c:["置換反応","中和反応","酸化・還原反応","以上の全て"],a:1},
+      {q:"アルキルハロゲン化物の消除反応で何になる？",c:["アルコール","アルキレン（不飽和炭化水素）","酸","エステル"],a:1},
+      {q:"エタン（C₂H₆）のハロゲン化の触媒は何か？",c:["光（紫外線）","熱","触媒金属","酸"],a:0},
+      {q:"酢酸の塩基による中和の生成物は？",c:["CH₃COONa と H₂O","NaCl と H₂O","CO₂ と H₂O","以上の全て"],a:0},
+      {q:"アルコールの分子間脱水で何になる？",c:["アルデヒド","エーテル","酸","エステル"],a:1},
+      {q:"アルコールの分子内脱水で何になる？",c:["アルデヒド","エーテル","アルキレン（不飽和炭化水素）","酸"],a:2},
+      {q:"フェニルハロゲン化物とNaOHの反応で何になる？",c:["フェノール","アルコール","酸","エステル"],a:0},
+      {q:"エチレンの自由基合成で何になる？",c:["ポリエチレン","エタン","エタノール","以上の全て"],a:0},
+      {q:"アルキルハロゲン化物のSN1反応で何になる？",c:["アルコール","アルデヒド","酸","エステル"],a:0},
+      {q:"アルキルハロゲン化物のSN2反応で何になる？",c:["アルコール","アルデヒド","酸","エステル"],a:0},
+      {q:"エタノールの酸性条件下での氧化で直接生まれるのは？",c:["アセトアルデヒド","酢酸","エタン","以上の両方（アルデヒドと酸）"],a:3},
+      {q:"酸性ポタシウム二クロメートでの炭化水素の氧化の生成物は？",c:["アルコール","アルデヒド","酸","以上の全て（酸になる）"],a:3},
+      {q:"エチレンに水を付加する反応で何になる？",c:["エタン","エタノール","アセトアルデヒド","酢酸"],a:1},
+      {q:"アルキルハロゲン化物のE1反応で何になる？",c:["アルコール","アルキレン","酸","エステル"],a:1},
+      {q:"アルキルハロゲン化物のE2反応で何になる？",c:["アルコール","アルキレン","酸","エステル"],a:1},
+      {q:"エタノールの完全燃燃燃の反応式の係数バランスで酸素は何分子か？",c:["2","3","1","4"],a:1}
+    ]
+  }
+};
+
+// ===== STATE =====
+let currentLevel = 'middle';
+let currentCat = null;
+let quizQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+// ===== CATEGORIES =====
+const CATEGORIES = [
+  { key:'element', label:'元素記号', icon:'🧬' },
+  { key:'formula', label:'化学式',   icon:'⚗️' },
+  { key:'reaction',label:'化学反応式',icon:'🔥' }
+];
+
+// ===== INIT =====
+function init() { renderHome(); }
+
+// ===== LEVEL =====
+function setLevel(level) {
+  currentLevel = level;
+  document.getElementById('btn-middle').classList.toggle('active', level==='middle');
+  document.getElementById('btn-high').classList.toggle('active', level==='high');
+  renderHome();
+}
+
+// ===== HOME =====
+function renderHome() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const count = DATA[c.key][currentLevel].length;
+    grid.innerHTML += `
+      <div class="cat-card" onclick="startQuiz('${c.key}')">
+        <div class="icon">${c.icon}</div>
+        <h3>${c.label}</h3>
+        <div class="count">${count} 問</div>
+      </div>`;
+  });
+}
+
+function goHome() {
+  showScreen('screen-home');
+  renderHome();
+}
+
+// ===== QUIZ =====
+function startQuiz(cat) {
+  currentCat = cat;
+  const all = [...DATA[cat][currentLevel]];
+  quizQuestions = all.sort(() => Math.random()-0.5).slice(0, Math.min(all.length, 20));
+  currentIndex = 0;
+  score = 0;
+  showScreen('screen-quiz');
+
+  // badge
+  const badge = document.getElementById('level-badge');
+  badge.textContent = currentLevel === 'middle' ? '🏫 中学生' : '🎓 高校生';
+  badge.className = 'level-badge ' + currentLevel;
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = quizQuestions[currentIndex];
+  document.getElementById('q-num').textContent = `問題 ${currentIndex+1}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('progress-info').textContent = `${currentIndex+1} / ${quizQuestions.length}`;
+  document.getElementById('progress-bar').style.width = `${(currentIndex/quizQuestions.length)*100}%`;
+
+  let indices = [0,1,2,3];
+  indices.sort(() => Math.random()-0.5);
+  const shuffled = indices.map(i => ({text: q.c[i], isCorrect: i===q.a}));
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  const labels = ['A','B','C','D'];
+  shuffled.forEach((ch, idx) => {
+    choicesEl.innerHTML += `
+      <div class="choice" onclick="selectAnswer(this,${ch.isCorrect})" data-correct="${ch.isCorrect}">
+        <div class="choice-label">${labels[idx]}</div>
+        <div>${ch.text}</div>
+      </div>`;
+  });
+  document.getElementById('next-btn').classList.remove('visible');
+}
+
+function selectAnswer(el, isCorrect) {
+  if(answered) return;
+  answered = true;
+  document.querySelectorAll('.choice').forEach(c => c.classList.add('disabled'));
+  if(isCorrect) { el.classList.add('correct'); score++; }
+  else {
+    el.classList.add('wrong');
+    document.querySelectorAll('.choice').forEach(c => {
+      if(c.dataset.correct==='true') c.classList.add('correct');
+    });
+  }
+  document.getElementById('next-btn').classList.add('visible');
+  document.getElementById('next-btn').textContent = (currentIndex < quizQuestions.length-1) ? '次へ →' : '結果へ →';
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if(currentIndex >= quizQuestions.length) showResult();
+  else renderQuestion();
+}
+
+// ===== RESULT =====
+function showResult() {
+  showScreen('screen-result');
+  const pct = Math.round((score/quizQuestions.length)*100);
+  document.getElementById('score-big').textContent = `${score} / ${quizQuestions.length}`;
+  document.getElementById('score-label').textContent = `正解率 ${pct}%`;
+  let icon='🎉', title='素晴らしい！';
+  if(pct<40){ icon='😅'; title='もう少し頑張って！'; }
+  else if(pct<70){ icon='👍'; title='よくやった！'; }
+  else if(pct<100){ icon='🌟'; title='すごい！'; }
+  else { icon='🏆'; title='完璧！'; }
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('result-title').textContent = title;
+}
+
+function retryQuiz() { startQuiz(currentCat); }
+
+// ===== UTILS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>
