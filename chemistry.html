@@ -523,7 +523,7 @@ function goHome() {
 function startQuiz(cat) {
   currentCat = cat;
   const all = [...DATA[cat][currentLevel]];
-  quizQuestions = all.sort(() => Math.random()-0.5).slice(0, Math.min(all.length, 20));
+  quizQuestions = all.sort(() => Math.random()-0.5).slice(0, Math.min(all.length, 8));
   currentIndex = 0;
   score = 0;
   showScreen('screen-quiz');
